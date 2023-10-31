@@ -1,0 +1,33 @@
+import warnings
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.feature_extraction import DictVectorizer
+from sklearn import tree
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+data = pd.read_csv("data.csv")
+df = data.drop(["Goal"], axis=1)
+
+le = LabelEncoder()
+y = le.fit_transform(data["Goal"])
+
+X_train, X_test, y_train, y_test = train_test_split(df, y, test_size=0.25)
+
+vect = DictVectorizer(sparse=False)
+X_train = vect.fit_transform(X_train.T.to_dict().values())
+X_test = vect.transform(X_test.T.to_dict().values())
+
+clf = tree.DecisionTreeClassifier(criterion="entropy")
+clf.fit(X_train, y_train)
+
+y_pred = clf.predict(X_test)
+
+print("Train Set")
+print(X_train)
+print('Test set')
+print(X_test)
+print('Test data')
+print(le.inverse_transform(y_pred))
