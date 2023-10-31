@@ -1,0 +1,109 @@
+import queue as Q
+
+dict_hn = {'Arad': 336, 'Bucharest': 0, 'Craiova': 160, 'Drobeta': 242,
+           'Eforie': 161, 'Fagaras': 176, 'Giurgiu': 77, 'Hirsova': 151, 'Iasi': 226,
+           'Lugoj': 244, 'Mehadia': 241, 'Neamt': 234, 'Oradea': 380, 'Pitesti': 100,
+           'Rimnicu': 193, 'Sibiu': 253, 'Timisoara': 329, 'Urziceni': 80,
+           'Vaslui': 199, 'Zerind': 374}
+
+dict_gn = {
+    'Arad': {'Zerind': 75, 'Timisoara': 118, 'Sibiu': 140},
+    'Bucharest': {'Urziceni': 85, 'Fagaras': 211, 'Giurgiu': 90, 'Pitesti': 101},
+    'Craiova': {'Drobeta': 120, 'Rimnicu': 146, 'Pitesti': 138},
+    'Drobeta': {'Mehadia': 75, 'Craiova': 120},
+    'Eforie': {'Hirsova': 86},
+    'Fagaras': {'Sibiu': 99, 'Bucharest': 211},
+    'Giurgiu': {'Bucharest': 90},
+    'Hirsova': {'Urziceni': 98, 'Eforie': 86},
+    'Iasi': {'Vaslui': 92, 'Neamt': 87},
+    'Lugoj': {'Timisoara': 111, 'Mehadia': 70},
+    'Mehadia': {'Lugoj': 70, 'Drobeta': 75},
+    'Neamt': {'Iasi': 87},
+    'Oradea': {'Zerind': 71, 'Sibiu': 151},
+    'Pitesti': {'Rimnicu': 97, 'Craiova': 138, 'Bucharest': 101},
+    'Rimnicu': {'Sibiu': 80, 'Pitesti': 97, 'Craiova': 146},
+    'Sibiu': {'Fagaras': 99, 'Rimnicu': 80, 'Oradea': 151, 'Arad': 140},
+    'Timisoara': {'Arad': 118, 'Lugoj': 111},
+    'Urziceni': {'Hirsova': 98, 'Bucharest': 85, 'Vaslui': 142},
+    'Vaslui': {'Iasi': 92, 'Urziceni': 142},
+    'Zerind': {'Arad': 75, 'Oradea': 71}
+}
+
+
+def get_fn(citystr):
+    cities = citystr.split(',')
+    hn = 0
+    gn = 0
+    ctr = 0
+    while ctr != len(cities) - 1:
+        gn = gn + dict_gn[cities[ctr]][cities[ctr + 1]]
+        ctr = ctr + 1
+    hn = dict_hn[cities[len(cities) - 1]]
+    return hn + gn
+
+
+def expand(mycities, cityq, goal):
+    tot, citystr = mycities
+    cities = citystr.split(',')
+    city2expand = cities[-1]
+    if city2expand == goal:
+        ans = 'The Recursive best first search is ' + citystr + ' with the value as ' + str(tot)
+        while not cityq.empty():
+            cityq.get()
+        return ans
+    print('Expanded city-----------------------', city2expand)
+    tempq = Q.PriorityQueue()
+    for cty in dict_gn[city2expand]:
+        tempq.put((get_fn(citystr + "," + cty), citystr + "," + cty))
+    print('First Best and Second Best Inserted in PriorityQueue: ')
+    ctr = 1
+    if cityq.empty():
+        while not tempq.empty():
+            if ctr == 1 or ctr == 2:
+                tempgn, tempcitystr = tempq.get()
+                print('Inserting into CityQueue: ', tempgn, ',', tempcitystr)
+                cityq.put((tempgn, tempcitystr))
+                ctr = ctr + 1
+            else:
+                tempq.get()
+    else:
+        fn = 0
+        citystring = ''
+        fn = getSecondBest(cityq, fn, citystring)
+        while not tempq.empty():
+            if ctr == 1 or ctr == 2:
+                tempgn, tempcitystr = tempq.get()
+                if tempgn > fn:
+                    if ctr == 1:
+                        print('Inserting into CityQueue:', tempgn, ',', citystr)
+                        cityq.put((tempgn, citystr))
+                    ctr = 3
+                    continue
+                else:
+                    print('Inserting into CityQueue:', tempgn, ',', tempcitystr)
+                    cityq.put((tempgn, tempcitystr))
+                    ctr = ctr + 1
+            else:
+                tempq.get()
+    while not tempq.empty():
+        tempq.get()
+
+
+def getSecondBest(cityq, fn, citystring):
+    fn, citystring = cityq.get()
+    cityq.put((fn, citystring))
+    return fn
+
+
+def main():
+    start = 'Arad'
+    goal = 'Bucharest'
+    cityq = Q.PriorityQueue()
+    cityq.put((get_fn(start), start))
+    while not cityq.empty():
+        mycities = cityq.get()
+        ans = expand(mycities, cityq, goal)
+        print('#########', ans)
+
+
+main()
